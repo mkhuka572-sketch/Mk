@@ -71,6 +71,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -120,31 +121,40 @@ private fun ProjectXRoot(
     val savedCreations by container.localRepository.observeCreations()
         .collectAsStateWithLifecycle(initialValue = emptyList())
 
-    val currentUser by AuthManager.authStateFlow(Firebase.auth)
-        .collectAsStateWithLifecycle(initialValue = Firebase.auth.currentUser)
+    val firebaseReady = container.isFirebaseConfigured
+    val currentUser by (if (firebaseReady) {
+        AuthManager.authStateFlow(Firebase.auth)
+    } else {
+        flowOf(null)
+    }).collectAsStateWithLifecycle(
+        initialValue = if (firebaseReady) Firebase.auth.currentUser else null
+    )
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var splashFinished by remember { mutableStateOf(false) }
 
     // Silent auto-sign-in attempt on startup if user previously authorized Google Sign-In
-    LaunchedEffect(Unit) {
-        AuthManager.attemptAutoSignIn(
-            context = context,
-            credentialManager = CredentialManager.create(context),
-            scope = scope
-        )
+    LaunchedEffect(firebaseReady) {
+        if (firebaseReady) {
+            AuthManager.attemptAutoSignIn(
+                context = context,
+                credentialManager = CredentialManager.create(context),
+                scope = scope
+            )
+        }
     }
 
     // Active Firestore cloud sync jobs when signed in, cancelled cleanly before signOut
     var syncJobs by remember { mutableStateOf<List<Job>>(emptyList()) }
     val activeUid = currentUser?.uid
-    LaunchedEffect(activeUid) {
+    LaunchedEffect(activeUid, firebaseReady) {
         syncJobs.forEach { it.cancel() }
-        if (!activeUid.isNullOrBlank()) {
+        val syncRepo = container.firestoreSyncRepository
+        if (firebaseReady && syncRepo != null && !activeUid.isNullOrBlank()) {
             val j1 = launch {
                 try {
-                    container.firestoreSyncRepository.observeCloudCreations(activeUid).collect { docs ->
+                    syncRepo.observeCloudCreations(activeUid).collect { docs ->
                         docs.forEach { doc ->
                             val id = doc.localId.ifBlank { doc.id }
                             if (id.isNotBlank()) {
@@ -172,7 +182,7 @@ private fun ProjectXRoot(
             }
             val j2 = launch {
                 try {
-                    container.firestoreSyncRepository.observeCloudNotes(activeUid).collect { docs ->
+                    syncRepo.observeCloudNotes(activeUid).collect { docs ->
                         docs.forEach { doc ->
                             val id = doc.localId.ifBlank { doc.id }
                             if (id.isNotBlank()) {

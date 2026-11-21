@@ -190,6 +190,10 @@ fun ProfileSettingsScreen(
 
                         Button(
                             onClick = {
+                                if (!container.isFirebaseConfigured) {
+                                    authError = "Firebase configuration (google-services.json) is missing in this build."
+                                    return@Button
+                                }
                                 authError = null
                                 isAuthLoading = true
                                 AuthManager.onGoogleSignInClicked(
@@ -200,7 +204,7 @@ fun ProfileSettingsScreen(
                                         isAuthLoading = false
                                         scope.launch {
                                             val user = Firebase.auth.currentUser
-                                            container.firestoreSyncRepository.upsertUserProfile(
+                                            container.firestoreSyncRepository?.upsertUserProfile(
                                                 displayName = user?.displayName ?: guestName,
                                                 preferredLanguage = languageCode,
                                                 themeMode = themeMode.name
@@ -264,9 +268,9 @@ fun ProfileSettingsScreen(
                                     scope.launch {
                                         val creations = container.localRepository.observeCreations().first()
                                         val notes = container.localRepository.observeNotes().first()
-                                        creations.forEach { container.firestoreSyncRepository.syncCreation(it) }
-                                        notes.forEach { container.firestoreSyncRepository.syncNote(it) }
-                                        container.firestoreSyncRepository.upsertUserProfile(
+                                        creations.forEach { container.firestoreSyncRepository?.syncCreation(it) }
+                                        notes.forEach { container.firestoreSyncRepository?.syncNote(it) }
+                                        container.firestoreSyncRepository?.upsertUserProfile(
                                             displayName = currentUser.displayName ?: guestName,
                                             preferredLanguage = languageCode,
                                             themeMode = themeMode.name
@@ -323,7 +327,7 @@ fun ProfileSettingsScreen(
                                     scope.launch {
                                         container.preferencesManager.setThemeMode(mode)
                                         if (currentUser != null) {
-                                            container.firestoreSyncRepository.upsertUserProfile(
+                                            container.firestoreSyncRepository?.upsertUserProfile(
                                                 displayName = currentUser.displayName ?: guestName,
                                                 preferredLanguage = languageCode,
                                                 themeMode = mode.name
@@ -357,7 +361,7 @@ fun ProfileSettingsScreen(
                                     scope.launch {
                                         container.preferencesManager.setLanguageCode(lang.code)
                                         if (currentUser != null) {
-                                            container.firestoreSyncRepository.upsertUserProfile(
+                                            container.firestoreSyncRepository?.upsertUserProfile(
                                                 displayName = currentUser.displayName ?: guestName,
                                                 preferredLanguage = lang.code,
                                                 themeMode = themeMode.name
@@ -439,7 +443,7 @@ fun ProfileSettingsScreen(
                             container.localRepository.clearAllLocalData()
                             container.preferencesManager.clearAllPreferences()
                             if (currentUser != null) {
-                                container.firestoreSyncRepository.deleteAllUserCloudData()
+                                container.firestoreSyncRepository?.deleteAllUserCloudData()
                             }
                             showDeleteConfirm = false
                             snackbarHostState.showSnackbar("All saved data deleted")
