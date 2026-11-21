@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Per-user preferences and profile settings synced when signed in with Google.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID matching the document ID." },
+        "displayName": { "type": "string", "description": "User display name (1-80 chars)." },
+        "preferredLanguage": { "type": "string", "description": "Preferred UI/AI language code (e.g. en, bn, ar, es, fr, hi)." },
+        "themeMode": { "type": "string", "enum": ["SYSTEM", "DARK", "LIGHT"], "description": "App theme preference." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." }
+      },
+      "required": ["userId", "displayName", "preferredLanguage", "themeMode", "createdAt", "updatedAt"]
+    },
+    "SavedCreation": {
+      "title": "SavedCreation",
+      "description": "A creative AI or studio output saved by the user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID." },
+        "localId": { "type": "string", "description": "Deterministic local identifier." },
+        "type": { "type": "string", "enum": ["IMAGE", "WRITING", "VIDEO_PLAN", "PHOTO_QA", "VOICE_SCRIPT", "QR_CODE"], "description": "Creation category." },
+        "title": { "type": "string", "description": "Title of the creation (1-150 chars)." },
+        "content": { "type": "string", "description": "Text content, prompt, or metadata summary." },
+        "prompt": { "type": "string", "description": "Optional prompt used to generate this creation." },
+        "language": { "type": "string", "description": "Optional language tag." },
+        "favorite": { "type": "boolean", "description": "Whether the creation is starred." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." }
+      },
+      "required": ["userId", "localId", "type", "title", "content", "favorite", "createdAt", "updatedAt"]
+    },
+    "UserNote": {
+      "title": "UserNote",
+      "description": "Offline-first creative note synced when signed in.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID." },
+        "localId": { "type": "string", "description": "Deterministic local note identifier." },
+        "title": { "type": "string", "description": "Note title (1-150 chars)." },
+        "body": { "type": "string", "description": "Note body text." },
+        "category": { "type": "string", "description": "Note category label." },
+        "pinned": { "type": "boolean", "description": "Pinned state." },
+        "favorite": { "type": "boolean", "description": "Favorite state." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." }
+      },
+      "required": ["userId", "localId", "title", "body", "category", "pinned", "favorite", "createdAt", "updatedAt"]
+    },
+    "ChatSessionSummary": {
+      "title": "ChatSessionSummary",
+      "description": "Metadata summary of a Gemini AI chat session.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID." },
+        "localId": { "type": "string", "description": "Deterministic local session identifier." },
+        "title": { "type": "string", "description": "Chat session title (1-150 chars)." },
+        "language": { "type": "string", "description": "Primary language code." },
+        "lastMessagePreview": { "type": "string", "description": "Latest message preview." },
+        "messageCount": { "type": "integer", "description": "Count of messages in session." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()." }
+      },
+      "required": ["userId", "localId", "title", "language", "lastMessagePreview", "messageCount", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and preference settings document."
+    },
+    "/users/{userId}/creations/{creationId}": {
+      "schema": { "$ref": "#/entities/SavedCreation" },
+      "description": "User's synced saved creations."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/UserNote" },
+      "description": "User's synced offline-first notes."
+    },
+    "/users/{userId}/chats/{sessionId}": {
+      "schema": { "$ref": "#/entities/ChatSessionSummary" },
+      "description": "User's synced chat session summaries."
+    }
+  }
+}

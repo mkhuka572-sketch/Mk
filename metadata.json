@@ -1,0 +1,6 @@
+{
+  "name": "MK Assist",
+  "description": "Free global AI Creative Super App combining Gemini AI Chat, Writing Studio, Image Studio, Photo Understanding, Voice & Video Planning Studios, Offline Creative Toolbox, and Saved Creations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
